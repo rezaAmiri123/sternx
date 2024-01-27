@@ -36,7 +36,14 @@ type (
 	}
 )
 
-func NewPhilosopher(philoNum int, leftCS, rightCS *Chopstick, requestChan chan EatRequest, responseChan chan EatResponse, doneChan chan EatDone, options ...PhilosopherOption) *Philosopher {
+func NewPhilosopher(
+	philoNum int,
+	leftCS, rightCS *Chopstick,
+	requestChan chan EatRequest,
+	responseChan chan EatResponse,
+	doneChan chan EatDone,
+	options ...PhilosopherOption,
+) *Philosopher {
 	p := &Philosopher{
 		philoNum:     philoNum,
 		eatTimes:     defaultEatTimes,
@@ -57,7 +64,6 @@ func NewPhilosopher(philoNum int, leftCS, rightCS *Chopstick, requestChan chan E
 func (p *Philosopher) Run() {
 	for numEat := 0; numEat < p.eatTimes; numEat++ {
 		// once the philosopher intends to eat, lock the corresponding chopsticks
-
 		for {
 			p.leftCS.mu.Lock()
 			// Attempt to get the right Chopstick -
@@ -67,23 +73,16 @@ func (p *Philosopher) Run() {
 				break
 			}
 			p.leftCS.mu.Unlock()
-			// time.Sleep(time.Millisecond * time.Duration(rand.Intn(2)))
 		}
 
 		// We have the chopsticks but need the hosts permission
-
-		// when accepted we will receive a function to call when done eating
-		// ffc := make(chan func())
-
 		p.requestChan <- EatRequest{
 			who: p.philoNum,
 		}
 		response := <-p.responseChan
-		// doneEating := <-ffc
 
 		duration := response.duration / time.Millisecond
 		fmt.Printf("philosopher %d starting to eat (duration %d) (%d feed)\n", p.philoNum, duration, numEat)
-		// Eating takes a random amount of time
 		time.Sleep(response.duration)
 		fmt.Printf("philosopher %d finished eating (duration %d) (%d feed)\n", p.philoNum, duration, numEat)
 
